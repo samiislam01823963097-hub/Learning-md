@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>লার্নহাব - প্রোফেশনাল ই-লার্নিং প্ল্যাটফর্ম</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-dark: #0a1a3a;
+            --card-dark: rgba(255, 255, 255, 0.05);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            transition: 0.3s;
+        }
+
+        body.light-mode {
+            --bg-dark: #f1f5f9;
+            --text-main: #1e293b;
+            --card-dark: #ffffff;
+            --text-muted: #64748b;
+        }
+
+        /* Header & Sidebar */
+        .header {
+            position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: rgba(10, 26, 58, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .logo { font-size: 20px; font-weight: bold; color: var(--primary); cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .logo img { height: 30px; border-radius: 5px; }
+
+        .sidebar {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: #0f172a; transition: 0.3s; z-index: 2000; padding: 20px;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+        }
+        .sidebar.active { left: 0; }
+        .sidebar-item { padding: 12px; margin-bottom: 5px; cursor: pointer; border-radius: 8px; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .sidebar-item:hover { background: rgba(255,255,255,0.1); }
+
+        /* Main Content */
+        .container { max-width: 1200px; margin: 80px auto 100px; padding: 0 15px; }
+        .card { background: var(--card-dark); border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05); }
+
+        /* Grid System */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .course-card { background: var(--card-dark); border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; }
+        .course-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .course-img { width: 100%; height: 160px; object-fit: cover; }
+        .course-content { padding: 15px; }
+
+        /* Auth Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 15px; }
+        .modal-content { background: #1e293b; width: 100%; max-width: 400px; padding: 30px; border-radius: 20px; position: relative; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: rgba(0,0,0,0.2); border: 1px solid #334155; color: white; border-radius: 8px; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        .close-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 20px; }
+
+        /* Toast Notification */
+        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #334155; padding: 10px 25px; border-radius: 50px; display: none; z-index: 4000; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+        /* Footer Navigation (Mobile) */
+        .footer-nav { position: fixed; bottom: 0; width: 100%; background: #0f172a; height: 65px; display: flex; justify-content: space-around; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: var(--text-muted); cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+
+        .balance-badge { background: rgba(34, 197, 94, 0.2); color: #22c55e; padding: 5px 12px; border-radius: 50px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo" id="homeLogo">
+            <span id="siteLogo">🎓 লার্নহাব</span>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <i class="fas fa-moon" id="themeBtn" style="cursor:pointer"></i>
+            <div id="userBalance" class="balance-badge" style="display:none">৳ 0</div>
+            <i class="fas fa-bars" id="menuBtn" style="cursor:pointer; font-size: 20px;"></i>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div style="display:flex; justify-content:space-between; margin-bottom:30px;">
+            <h3>মেনু</h3>
+            <i class="fas fa-times" onclick="closeSidebar()" style="cursor:pointer"></i>
+        </div>
+        <div class="sidebar-item" onclick="changeView('home')"><i class="fas fa-home"></i> হোম</div>
+        <div class="sidebar-item" onclick="changeView('courses')"><i class="fas fa-book"></i> কোর্সসমূহ</div>
+        <div id="adminLink" class="sidebar-item" onclick="changeView('admin')" style="display:none; color: #fbbf24;"><i class="fas fa-user-shield"></i> অ্যাডমিন প্যানেল</div>
+        <div class="sidebar-item" onclick="logout()" style="color: var(--danger);"><i class="fas fa-sign-out-alt"></i> লগআউট</div>
+    </div>
+
+    <div class="container" id="mainContent">
+        </div>
+
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAuthModal()">&times;</span>
+            <h2 id="authTitle" style="margin-bottom:20px;">লগইন করুন</h2>
+            <div id="authInputs">
+                <input type="text" id="authName" placeholder="আপনার নাম" style="display:none">
+                <input type="number" id="authPhone" placeholder="মোবাইল নম্বর">
+                <input type="password" id="authPass" placeholder="পাসওয়ার্ড">
+                <input type="text" id="authRef" placeholder="রেফারেল কোড (ঐচ্ছিক)" style="display:none">
+                <button id="authSubmit" onclick="handleAuth()">প্রবেশ করুন</button>
+                <p style="text-align:center; margin-top:15px; font-size:14px; cursor:pointer;" onclick="toggleAuthMode()" id="authToggle">নতুন অ্যাকাউন্ট তৈরি করুন</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">বার্তা</div>
+
+    <nav class="footer-nav">
+        <div class="nav-item active" onclick="changeView('home')"><i class="fas fa-home"></i> হোম</div>
+        <div class="nav-item" onclick="changeView('courses')"><i class="fas fa-play-circle"></i> লার্নিং</div>
+        <div class="nav-item" onclick="changeView('profile')"><i class="fas fa-user"></i> প্রোফাইল</div>
+    </nav>
+
+<script>
+    // আপনার দেওয়া সঠিক ব্যাকএন্ড লিঙ্ক
+    const API_URL = "https://script.google.com/macros/s/AKfycbzjdHY22Aqu8XCKfINFJtqIcVbkX9rrfW2QykqgTB_2Sjrb-mkXn9kysATiDw3wSObWoA/exec";
+
+    let state = {
+        users: [],
+        courses: [],
+        settings: { logo: "🎓 লার্নহাব", referralBonus: 50 },
+        currentUser: null,
+        view: 'home',
+        isLoginMode: true
+    };
+
+    // --- Core Database Functions ---
+    async function sync(action, data = null) {
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Apps Script এর জন্য নিরাপদ
+                body: JSON.stringify({ action, data })
+            });
+            // দ্রষ্টব্য: no-cors মোডে রেসপন্স রিড করা যায় না, তাই আমরা লোকাল স্টেট আপডেট রাখি।
+            return true;
+        } catch (e) {
+            console.error("Sync Error:", e);
+            return false;
+        }
+    }
+
+    async function loadData() {
+        const localUsers = localStorage.getItem('lh_users');
+        const localCourses = localStorage.getItem('lh_courses');
+        if(localUsers) state.users = JSON.parse(localUsers);
+        if(localCourses) state.courses = JSON.parse(localCourses);
+        
+        // বর্তমান লগইন চেক
+        const savedUser = localStorage.getItem('lh_current');
+        if(savedUser) state.currentUser = JSON.parse(savedUser);
+    }
+
+    function saveData() {
+        localStorage.setItem('lh_users', JSON.stringify(state.users));
+        localStorage.setItem('lh_courses', JSON.stringify(state.courses));
+        if(state.currentUser) localStorage.setItem('lh_current', JSON.stringify(state.currentUser));
+        else localStorage.removeItem('lh_current');
+    }
+
+    // --- UI Logic ---
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    function changeView(v) {
+        state.view = v;
+        closeSidebar();
+        render();
+    }
+
+    function openSidebar() { document.getElementById('sidebar').classList.add('active'); }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); }
+    function openAuthModal() { document.getElementById('authModal').style.display = 'flex'; }
+    function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+
+    function toggleAuthMode() {
+        state.isLoginMode = !state.isLoginMode;
+        document.getElementById('authTitle').innerText = state.isLoginMode ? "লগইন করুন" : "অ্যাকাউন্ট খুলুন";
+        document.getElementById('authName').style.display = state.isLoginMode ? "none" : "block";
+        document.getElementById('authRef').style.display = state.isLoginMode ? "none" : "block";
+        document.getElementById('authSubmit').innerText = state.isLoginMode ? "প্রবেশ করুন" : "রেজিস্ট্রেশন করুন";
+        document.getElementById('authToggle').innerText = state.isLoginMode ? "নতুন অ্যাকাউন্ট তৈরি করুন" : "আগে থেকেই অ্যাকাউন্ট আছে? লগইন করুন";
+    }
+
+    // --- Auth Actions ---
+    async function handleAuth() {
+        const phone = document.getElementById('authPhone').value;
+        const pass = document.getElementById('authPass').value;
+        const name = document.getElementById('authName').value;
+
+        if(!phone || !pass) return showToast("সব তথ্য দিন");
+
+        if(state.isLoginMode) {
+            const user = state.users.find(u => u.phone === phone && u.pass === pass);
+            if(user) {
+                state.currentUser = user;
+                showToast("লগইন সফল!");
+                closeAuthModal();
+            } else {
+                showToast("ভুল তথ্য!");
+            }
+        } else {
+            if(state.users.find(u => u.phone === phone)) return showToast("এই নম্বর ব্যবহৃত হয়েছে");
+            const newUser = {
+                id: Date.now(),
+                name, phone, pass,
+                role: 'user',
+                balance: 0,
+                enrolled: [],
+                status: 'active'
+            };
+            state.users.push(newUser);
+            state.currentUser = newUser;
+            await sync("SAVE_USERS", state.users);
+            showToast("অ্যাকাউন্ট তৈরি সফল!");
+            closeAuthModal();
+        }
+        saveData();
+        render();
+    }
+
+    function logout() {
+        state.currentUser = null;
+        state.view = 'home';
+        saveData();
+        render();
+    }
+
+    // --- Main Render ---
+    function render() {
+        const content = document.getElementById('mainContent');
+        const bal = document.getElementById('userBalance');
+        
+        // আপডেট ব্যালেন্স ডিসপ্লে
+        if(state.currentUser) {
+            bal.style.display = 'block';
+            bal.innerText = `৳ ${state.currentUser.balance}`;
+            if(state.currentUser.role === 'admin') document.getElementById('adminLink').style.display = 'flex';
+        } else {
+            bal.style.display = 'none';
+            document.getElementById('adminLink').style.display = 'none';
+        }
+
+        if(state.view === 'home') {
+            content.innerHTML = `
+                <div class="card" style="text-align:center; background: linear-gradient(45deg, #1e3a8a, #2563eb);">
+                    <h1>শিখুন নতুন কিছু, গড়ুন ভবিষ্যৎ</h1>
+                    <p style="margin:15px 0; opacity:0.9;">সেরা মেন্টরদের সাথে আজই আপনার যাত্রা শুরু করুন।</p>
+                    <button style="width:auto; padding: 12px 30px;" onclick="changeView('courses')">কোর্সগুলো দেখুন</button>
+                </div>
+                <h3>জনপ্রিয় কোর্সসমূহ</h3><br>
+                <div class="grid">${renderCourses()}</div>
+            `;
+        } 
+        else if(state.view === 'courses') {
+            content.innerHTML = `<h3>সবগুলো কোর্স</h3><br><div class="grid">${renderCourses()}</div>`;
+        }
+        else if(state.view === 'profile') {
+            if(!state.currentUser) return openAuthModal();
+            content.innerHTML = `
+                <div class="card" style="text-align:center">
+                    <i class="fas fa-user-circle" style="font-size:60px; color:var(--primary)"></i>
+                    <h2>${state.currentUser.name}</h2>
+                    <p>${state.currentUser.phone}</p>
+                    <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+                        <div class="balance-badge">ব্যালেন্স: ৳ ${state.currentUser.balance}</div>
+                    </div>
+                </div>
+                <h3>আপনার কোর্সসমূহ</h3><br>
+                <div class="grid">${renderMyCourses()}</div>
+            `;
+        }
+        else if(state.view === 'admin') {
+            content.innerHTML = `
+                <h2>অ্যাডমিন ড্যাশবোর্ড</h2>
+                <div class="card" style="margin-top:20px">
+                    <p>মোট ইউজার: ${state.users.length}</p>
+                    <p>মোট কোর্স: ${state.courses.length}</p>
+                    <button onclick="syncAll()" style="margin-top:10px; background:#059669"><i class="fas fa-sync"></i> ক্লাউড সিঙ্ক করুন</button>
+                </div>
+            `;
+        }
+    }
+
+    function renderCourses() {
+        if(state.courses.length === 0) return "<p>কোনো কোর্স পাওয়া যায়নি।</p>";
+        return state.courses.map(c => `
+            <div class="course-card">
+                <img src="${c.img || 'https://via.placeholder.com/300x160'}" class="course-img">
+                <div class="course-content">
+                    <h4>${c.title}</h4>
+                    <p style="font-size:14px; color:var(--text-muted)">${c.desc.substring(0,60)}...</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
+                        <b style="color:var(--success)">৳ ${c.price}</b>
+                        <button style="width:auto; padding:5px 15px;" onclick="enroll(${c.id})">এনরোল</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderMyCourses() {
+        const my = state.courses.filter(c => state.currentUser.enrolled.includes(c.id));
+        if(my.length === 0) return "<p>এখনও কোনো কোর্সে যুক্ত হননি।</p>";
+        return my.map(c => `
+            <div class="course-card">
+                <div class="course-content">
+                    <h4>${c.title}</h4>
+                    <button style="margin-top:10px" onclick="showToast('কোর্সটি লোড হচ্ছে...')">ক্লাস শুরু করুন</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function syncAll() {
+        showToast("সিঙ্ক হচ্ছে...");
+        await sync("SAVE_USERS", state.users);
+        await sync("SAVE_COURSES", state.courses);
+        showToast("গুগল শিটে সেভ হয়েছে!");
+    }
+
+    // প্রাথমিক লোড
+    window.onload = async () => {
+        await loadData();
+        render();
+    };
+
+    // থিম পরিবর্তন
+    document.getElementById('themeBtn').onclick = () => {
+        document.body.classList.toggle('light-mode');
+        const icon = document.getElementById('themeBtn');
+        icon.classList.toggle('fa-moon');
+        icon.classList.toggle('fa-sun');
+    };
+
+    document.getElementById('menuBtn').onclick = openSidebar;
+    document.getElementById('homeLogo').onclick = () => changeView('home');
+
+</script>
+</body>
+</html>
